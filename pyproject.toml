@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "secretsintheenv"
+version = "0.0.1"
+authors = [
+  { name="Yohnah", email="yohnah@gmail.com" },
+]
+description = "Tool for raising a configured shell with all required secrets, retrieved from compatible vaults, for your project onto memory in user space"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Topic :: Security",
+    "Topic :: System :: Shells",
+    "Topic :: Utilities"
+]
+
+dependencies = [
+    "pykeepass==4.0.3",
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]  # ["."] by default
+
+[project.scripts]
+secretsintheenv = "secretsenv.secretsenv:main"
+
+[project.urls]
+"Homepage" = "https://github.com/Yohnah/secretsenv"
+"Bug Tracker" = "https://github.com/Yohnah/secretsenv/issues"
