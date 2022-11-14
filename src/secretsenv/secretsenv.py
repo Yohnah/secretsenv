@@ -55,8 +55,8 @@ def main ():
 
         vaultsConnections = {}
         for backend in backends:
-            if not backend in vaultsConnections:
-                vaultsConnections.update(backendsParser(backend,confini.content))
+            if not backend in vaultsConnections.keys():
+                vaultsConnections.update(backendsParser(backend,confini.content,vaultsConnections))
 
         for secret in secrets[profile][section]:
             backend = secrets[profile][section][secret]['backend']

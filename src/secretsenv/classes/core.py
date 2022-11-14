@@ -56,8 +56,8 @@ class ParseIniFile (object):
     def parser(self):
         for conf in self.confs:
             self.content[conf] = {}
-            for section in self.confs[conf.lower()].sections():
-                self.content[conf.lower()][section.lower()] = dict(self.confs[conf.lower()].items(section))
+            for section in self.confs[conf].sections():
+                self.content[conf][section.lower()] = dict(self.confs[conf].items(section))
 
 
                 
@@ -124,20 +124,23 @@ class LoadSecretsManifest(ParseIniFile):
         self.content = content
 
 
-def backendsParser (backend_name,backendConf) -> None:
+def backendsParser (backend_name,backendConf,vaultsConnection) -> None:
         result = {}
         records = backendConf[backend_name].copy()  
         for record in records:
             try:
                 backend,query = records[record].split(";")
                 backend = backend.lower()
-                subresult = backendsParser(backend,backendConf)
-                records['password'] = subresult[backend].query(query)
-                result.update(subresult)
+                if not backend in vaultsConnection.keys():
+                    subresult = backendsParser(backend,backendConf)
+                    records['password'] = subresult[backend].query(query)
+                    result.update(subresult)
+                else:
+                    records['password'] = vaultsConnection[backend].query(query)
             except:
                 pass
 
-        if not backend_name in result:
+        if not backend_name in result.keys():
             if records['type'].lower() == 'keepass':
                 result[backend_name] = KeePassClass(backend_name,**records)
 

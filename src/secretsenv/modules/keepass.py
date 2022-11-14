@@ -24,6 +24,7 @@ class keepass (templates.backend):
             password = self.options.get('password')
         
         keyfile = self.options.get('keyfile',None)
+        keyfile = keyfile.replace('\\','')
         self.connection = PyKeePass(db_path,password=password,keyfile=keyfile)
 
     def query(self,query):
