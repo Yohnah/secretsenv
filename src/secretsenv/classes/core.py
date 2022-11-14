@@ -8,7 +8,7 @@ from ..modules.keepass import keepass as KeePassClass
 from ..modules.sshagent import SshAgent
 import subprocess,platform,re,traceback,json
 
-sys.tracebacklimit = 5
+sys.tracebacklimit = 0
 
 class Setup (object):
     def __init__(self) -> None:
