@@ -1,7 +1,7 @@
-from classes.config import config as CONFIG
-from classes.vaults import vaults as VAULTS
-from classes.dump import dump as DUMP
-from classes.run import run as RUN
+from .classes.config import config as CONFIG
+from .classes.vaults import vaults as VAULTS
+from .classes.dump import dump as DUMP
+from .classes.run import run as RUN
 
 secrets = {}
 

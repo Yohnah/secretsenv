@@ -1,5 +1,5 @@
 import os, subprocess, re, tempfile
-from classes.tools import delete_file
+from ..classes.tools import delete_file
 
 class SshAgent (object):
     def __init__(self,ssh_agent_path=None,new_process=True):

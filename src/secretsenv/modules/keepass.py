@@ -1,8 +1,8 @@
 import os
 import tempfile
 
-from classes.exceptions import BadFormat, ItisNotaFile
-from classes.tools import delete_file
+from ..classes.exceptions import BadFormat, ItisNotaFile
+from ..classes.tools import delete_file
 from pykeepass import PyKeePass
 
 

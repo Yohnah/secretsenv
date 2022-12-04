@@ -1,5 +1,5 @@
-from modules.keepass import keepass as KEEPASS
-from classes.exceptions import VaultNotSet
+from ..modules.keepass import keepass as KEEPASS
+from ..classes.exceptions import VaultNotSet
 import getpass
 
 class vaults (object):
