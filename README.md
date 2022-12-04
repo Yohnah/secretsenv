@@ -71,7 +71,26 @@ On Windows:
 ~~~~
 PS C:\> secretsintheenv.exe -h
 ~~~~
+___
+***Note:***
+In order to run:
+~~~
+$ secretsintheenv <arguments>
+~~~~
+~~~
+PS C:\> secretsintheenv.exe <arguments>
+~~~
 
+It is necessary to install with ADMIN RIGHTS (Using SUDO on Unix-Like or RUNAS on Windows, or similar)
+
+If you install the pip packages with simple users privileges, you have to replace the command above by:
+
+~~~
+$  python -m secretsenv.secretsenv <arguments>
+~~~
+~~~
+PS C:\> python.exe -m secretsenv.secretsenv <arguments>
+~~~
 ___
 
 ## Help
