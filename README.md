@@ -13,25 +13,24 @@ Welcome to this simple project, an application launcher to load your secrets in 
 
 # To-Do
 
-* Add support for running on Windows
 * Add Hashicorp Vault as a vault compatible
 
 # Requirements
 
 ## Compatible Operative Systems as host
 
-* MacOS (tested on BigSur x86_64 and higher)
+* MacOS (including Chip M1 and M2)
 * GNU/Linux
-___
-***Note:***
-Windows is not already compatible because some pykeepass issues on Windows. I'm working on fixing it.
-___
+* Windows 10/11/Servers (including SSH-Agent).
+  *  For installing OpenSSH on Windows, see https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse?tabs=gui
+
 
 ## Software
 
 * Python 3: <https://www.python.org/>
   * Dependences:
     * PyKeePass: https://github.com/libkeepass/pykeepass
+
 
 # Current compatible vaults
 
@@ -47,6 +46,34 @@ Install on Unix-Like and MacOS:
 $ sudo pip install secretsintheenv
 ~~~
 
+On Windows 
+
+**PowerShell**
+~~~
+PS C:\> pip install secretsintheenv
+~~~
+**CMD**
+~~~
+C:\> pip install secretsintheenv
+~~~
+
+___
+***Note:***
+Hereinafter, to run on Windows you should add the .exe suffix to command
+Ex:
+
+On Unix-Like:
+~~~~
+$ ./secretsintheenv -h
+~~~~
+
+On Windows:
+~~~~
+PS C:\> secretsintheenv.exe -h
+~~~~
+
+___
+
 ## Help
 
 Just run:
@@ -55,292 +82,253 @@ Just run:
 $ secretsintheenv -h
 ~~~
 
-Or with any position arguments, ex:
-
-~~~
-$ secretsintheenv init -h
-$ secretsintheenv run -h
-$ secretsintheenv dump -h
-~~~
-
-To get a list of arguments and options
-
-
 ## Set-Up
 
-First of all, you have to initialize your profile configuration, such as:
+Follow the next steps to reach out a good experience using this tool.
 
-~~~
-$ secretsintheenv init
-~~~
+### Step 1
 
-And, you will get a new created directory at $HOME/.secretsenv/ as follow:
+First of all, you have to create your .secretsenv.conf config file on your home directory with the following content:
 
-~~~
-$HOME/.secretsenv
-├── config.ini  #File to setup your compatible vault
-└── profiles/   #Directory to store different profile files to match variables with stored secrets in compatible vaults
-~~~
+~~~~
+$ cat $HOME/.secretsenv.comf
+[Config]
+ssh = True
+ssh-agent_type = ssh-agent
+ssh-agent_path = /usr/bin/ssh-agent
+vaults_file = /Path/to/vaults.conf
+profiles_dir = /Path/to/profiles/directory/
+~~~~
 
-## Step 1
+* **ssh** (mandatory): enable or disable SSH-Agent
+* **ssh-agent_type** (optional): just suport "ssh-agent" right now
+* **ssh-agent_path** (optional): set the path of ssh-agent you prefer using
+* **vaults_file** (mandatory): the file path where stored the vaults configurations. Also, it can be replaced by _SECRETSENV_VAULTS_FILE_ environment variable
+* **profiles_dir** (optional): the directory path where stored the profile files. Also, it can be replaced by _SECRETSENV_PROFILES_DIR_ environment varaible
 
-Configure the vault types needed to be referenced by the different manifests (see next steps).
 ___
 ***Note:***
-At the moment only KeePass is supported
-___
+Attributes can be set or replaced by command lines arguments. ([See Help section](#help))
 
-To configure the list of available vaults you must edit the file $HOME/.secretsenv/config.ini with content like the following:
-
-~~~
-[head_vault]
-type=keepass
-db_path=/path/of/keepass/file.kdbx
-password=true
-keyfile=/path/to/private/key/file.key 
-
-[KEEPASS_1]
-type=keepass
-db_path=/path/of/keepass/file2.kdbx
-password=head_vault;/path/to/record/to/retrieve/pass#field:field_name
-
-[KEEPASS_2]
-type=keepass
-db_path=/path/of/keepass/file3.kdbx
-password=head_vault;/path/to/record/to/retrieve/pass#field:field_name
-keyfile=/path/to/private/key/file3.key 
-~~~
-
-Each vault configuration must be defined from a section of the type [backend_name_1], using the name of your choice (the name is case insensitive).
-
-Next, each section must necessarily have the type argument with one of the following values defined:
-
- * keepass
+Line with Hashtags (#) in the beginning are considered comments 
 ___
 ***Note:***
-At the moment only vault KeePass is supported
+The .secretsenv.conf file and path can be replaced by using SECRETSENV_CONFIG_FILE environment variable. If you prefer using your own file, bear in mind to replace .secretsenv.conf by yours until the rest of this README.
 ___
 
-Following the arguments needed by the vault itself to work
 
-Following the arguments needed by the vault itself to work. Below we list the arguments needed by vault compatible:
+### Step 2
+
+Once configured the .secretsenv.conf, the next step is to create the vaults file configuration in the path set within .secretsenv.conf
+
+~~~
+$ cat /Path/to/vaults.conf
+[Section_Name]
+type=<type of vault>
+<attribute1>=<choose action>
+<attribute2>=<choose action>
+<attribute3>=<choose action>
+[...]
+~~~
+
+*  **[Section_Name]** (mandatory, Case Insensitive): Start a new section into file. Section_Name can be any name as you prefer, but it must be unique.
+*  **type** (manddatory, Case sensitive): Set the type of vault to be used. ([See the Vaults section](#vaults))
+*  **attribute** (case sensitive): The specific attribute to setup the specific vault. 
+   *  The type of attribute depends on the vault to configure [See the Vaults section](#vaults) for further information. 
+   *  The \<choose action\> value can be the following:
+      *  _prompt_. To prompt in the screen and write the value 
+      *  _VAULT_NAME:QUERYSTR_. To get the value from another vault. _VAULT_NAME_ is the name of vault to be used set as [Section_Name] and _QUERYSTR_ is the query string to retrieve the expected value. 
+
+You can write as many sections as you need, but remember not to repeat the name of the sections.
+
+___
+***Note:***
+To see exampled, please visit the section [Examples](#examples)
+___
+
+
+### Step 3
+So, we only need one file more (at least). We need to define the profile file (or several) to create the specific querys to retrieve our loved secrets.
+
+The file can be named as you prefer, but it must include the suffix .secrets to work, and a content such as:
+
+~~~
+$ cat /Path/to/profiles/directory/PROFILE_NAME.secrets
+[Section_Name]
+<TYPE>@<TAGNAME1>=<VAULT_NAME1>:<QUERYSTR>
+<TYPE>@<TAGNAME2>=<VAULT_NAME2>:<QUERYSTR>
+<TYPE>@<TAGNAME3>=<VAULT_NAME3>:<QUERYSTR>
+[...]
+~~~
+
+Similar to Vaults configuration file, you can define different sections by using the name you prefer, but unique by file, and then, set the different secrets you need to retrieve from specific vault. 
+
+___
+***Note:***
+The sections can be defined as you prefer, but one way to use it can be to define different work environments (Prod, Qua, Stage, Dev, ...) and thus obtain the different secrets that your project requires at all times
+___
+
+* **\<TYPE\>**: Can be:
+  * _VAR_: To retrieve the secret such as environment variable
+  * _SSH_: To add the secret into SSH-AGENT running in your system
+* **\<TAGNAME\>**: The name to identify the retrieved secret. When _VAR_ is used, the TAGNAME will be the environment variable name
+* **\<VAULT_NAME\>**: The vault name configured into vault configuration file
+* **\<QUERYSTR\>**: The query string (specific by type of vault) to retrieve the secret
+
+
+## Just run
+
+Once all requirements are configured, just use the tool as follows:
+
+~~~
+$ secretsintheenv profile profile_section action command
+~~~
+
+* **profile**: If not a path is set to a file, the tool will find your file into the "\<profiles_dir\>/<profile>.secrets" configured into the .secretsenv.conf file
+* **profile_section**: To indicate the secrets to be retrieved written in the specific section within the profile file
+* **action**: 
+  * _run_: to run the command set in the "command" argument
+  * _dump_: to dump on screen the secrets content by the format set in the "command" argument
+
+
+
+## Examples
+
+Assuming the following configured files:
+
+~~~
+ $ cat $HOME/.secretsenv.conf
+ [Config]
+ ssh = True
+ #ssh-agent_type = ssh-agent
+ #ssh-agent_path = /usr/bin/ssh-agent
+ vaults_file = /Path/to/vaults.conf
+ profiles_dir = /Path/to/profiles/directory
+~~~
+
+~~~
+$ cat /Path/to/vaults.conf
+[Personal]
+type=keepass
+db_path=/Path/to/Personal.kdbx
+password=prompt
+keyfile=/Path/to/Personal.key
+
+[Project]
+type=keepass
+db_path=/Path/to/Project.kdbx
+password=Personal:/Head Vaults/Project#field:password
+keyfile=/Path/to/Project.key
+~~~
+___
+***Note:***
+**Project** will retrieve the keepass password from the **Personal** vault, and **Personal** vault will **prompt** the password on screen to the user
+___
+
+~~~
+$ cat /Path/to/profiles/directory/project.secrets
+[QUA]
+VAR@AWS_ACCESS_KEY_ID=Project:/path/to/record1#field:aws_access_keyid
+VAR@AWS_SECRET_ACCESS_KEY=Project:/path/to/record2#field:aws_secret_access_key
+
+
+[Prod]
+VAR@AWS_ACCESS_KEY_ID=Project:/path/to/record1#field:aws_access_keyid
+VAR@AWS_SECRET_ACCESS_KEY=Project:/path/to/record2#field:aws_secret_access_key
+SSH@JUMP_SERVER1:Personal:/path/to/record20#attach:jump_server1.txt
+~~~
+
+
+### DUMP IT!!
+And just dump it to get the list of secrets on screen:
+
+~~~
+$ secretsintheenv project prod dump table
+~~~
+
+or, set the project file path
+
+~~~
+$ secretsintheenv /Path/to/profiles/directory/project.secrets prod dump table
+~~~
+
+Or, Get the environment variables to be directly used:
+
+**powershell_shell:**
+~~~
+PS C:\> secretsintheenv.exe C:/Path/to/profiles/directory/project.secrets prod dump powershell_shell
+~~~
+
+**cmd_shell:**
+~~~
+PS C:\> secretsintheenv.exe project prod dump cmd_shell
+~~~
+
+**unix_shell:**
+~~~
+$ secretsintheenv project.secrets prod dump unix_shell
+~~~
+
+Or, even, to eval the results to load the variables in the current environment:
+
+~~~
+$ eval $(secretsintheenv /Path/to/profiles/directory/project.secrets prod dump unix_shell)
+~~~
+
+### RUN IT!!!
+
+Or, if you prefer, just run a command with the loaded secrets in memory (and SSH Key into SSH-Agent)
+
+
+**On Unix-Like systems:**
+~~~
+$ secretsintheenv project.secrets prod run /bin/bash
+~~~
+
+~~~
+$ secretsintheenv /Path/to/profiles/directory/project.secrets prod run /bin/zsh
+~~~
+
+**On Windows systems:**
+~~~
+PS C:\> secretsintheenv.exe C:/Path/to/profiles/directory/project.secrets prod run /bin/zsh
+~~~
+
+~~~
+C:\> secretsintheenv.exe project prod run /bin/zsh
+~~~
+
+
+## VAULTS
 
 ### KeePaas
 
+**Vaults attributes**:
 * type=keepass (Mandatory)
-* db_path=/path/to/keepass/file.kdbx (Mandatory)
-* password (optional)
-  * Password can either have the value "true", which will cause you to be prompted for the password, or it can have a "plain string" that will be used as the password. Ex:
-    * password=true
-    * password=<<password>>
-* keyfile=/path/to/keepass/file.key (optional)
+* db_path= #Path to .kdbx file (Mandatory)
+* password= #if used, the password to unencrypt the db_path file
+* keyfile= #if used, the keyfile to unencrypt the db_path file
 
-***Look Out!***
-If you write a password in the password attribute, the password is stored in clear, which is dangerous because anyone with access to the file will be able to retrieve all the secrets from the vault.
+**Query string format (QUERYSTR)**:
 
-To avoid this, you can create another vault to be used as "head vault", for example, another keepass, which stores the passwords of the rest of the vaults and the password attribute is set to "true".
-
-In the rest of the vaults you can reference the content of the password with the following format, ex:
+QUERYSTR format is:
 
 ~~~
-[...]
-password=backend_name;query_to_retrieve_the_secret
-[...]
-~~~
-___
-***Note:***
-For futher informartion of the type of query to be used, see the step 3
-___
-
-In this way, the "head vault" will prompt for a password to retrieve the secrets to unlock of rest of vaults.
-
-## Step 2
-
-Create a manifest file in your work directory with the name "secretstoenv.ini". 
-
-This file will content the profile manifest to list the differents type of data to be load among different sections.
-
-An example of file could be:
-
-~~~
-[Info]
-profile=profile_name
-
-[PROD]
-GITHUB_TOKEN=variable
-AWS_ACCESS_KEY_ID=variable
-AWS_SECRET_ACCESS_KEY=variable
-SSH_KEY=ssh
-
-[QUA]
-GITHUB_TOKEN=variable
-AWS_ACCESS_KEY_ID=variable
-AWS_SECRET_ACCESS_KEY=variable
-ANY_VARIABLE_NAME=ssh
-ANY_VARIABLE_NAME_1=ssh
-ANY_VARIABLE_NAME_2=variable
-
-[DEV]
-GITHUB_TOKEN=variable
-AWS_ACCESS_KEY_ID=variable
-AWS_SECRET_ACCESS_KEY=variable
-ANY_VARIABLE_NAME=ssh
-VARIABLE_TO_BE_USED_ON_DEV=ssh
+  /path/to/record/into/keepass/file#record_type:record_name
 ~~~
 
-Sections are defined as [section_name] and are case insensitive. They can be defined by any name you prefer.
+* **/path/to/record/into/keepass/file** is the path to the record where the secret is stored in the KeePass database
+* **record_type**: can get the following values:
+  * __field__. To indicate that the secret is stored in a field
+  * __attach__. To indicate that the secret is stored as an attachment
+* **record_name**: The name of field or attachment where is stored the secret
 
-Each section contains a set of variables or ssh keys to be loaded.
-
-The only mandatory section should be [Info], which indicates the name of the profile to be used, such as:
-
-**profile**=*profile_name*
-
-The variables are defined as follows:
-
-**VARIABLE_NAME**=**type_of_variable** #It's case sensitive
-
-**VARIABLE_NAME** is the name of the variable that will be used as environment variable and **type_of_variable** can be set with the following values:
-
-* __variables__. Which indicates that this secret will be an environment variable
-* __ssh__. Which indicates that this secret is an SSH private key that must be inserted in the SSH-Agent service
-
-___
-***Note:***
-The definition of variables is case sensitive because the variable name format requested by the application that needs to consume the secret must be respected
-___
-
-***Note:***
-The idea of this manifest is to be stored in the working directory of the project you are developing. In this way, it is useful to load the secrets in memory in an ephemeral and easy way, in addition to having a declaration of the secrets that the project needs and the type of secret as part of the project documentation.
-
-For example, as part of a project developed in a Git repository
-___
-
-## Step 3
-
-Create a file in the following directory $HOME/.secretsenv/profiles/ (one file per profile).
-
-The content of this file is exactly the same as the secretstoenv.ini manifest in your working directory, but instead of indicating the type of variable (whether environment variables or SSH keys), the backend to query must be defined and the query to be execute, such as:
-
-**VARIABLE_NAME**=*backend_name*;query
-
+~~~
 Example:
-~~~
-[Info]
-profile=profile_name
-
-[PROD]
-GITHUB_TOKEN=KEEPASS_2;/path/to/record#field:field_name
-AWS_ACCESS_KEY_ID=KEEPASS_2;/path/to/record2#field:field_name
-AWS_SECRET_ACCESS_KEY=KEEPASS_1;/path/to/record3#field:field_name
-SSH_KEY=KEEPASS_2;/path/to/record4#attach:attachment_name
-
-[QUA]
-GITHUB_TOKEN=KEEPASS_1;/path/to/record20#field:field_name
-AWS_ACCESS_KEY_ID=KEEPASS_2;/path/to/record12#field:field_name
-AWS_SECRET_ACCESS_KEY=KEEPASS_2;/path/to/record#field1:field_name
-ANY_VARIABLE_NAME=KEEPASS_1;/path/to/record13#attach:attachment_name
-ANY_VARIABLE_NAME_1=KEEPASS_2;;/path/to/record4#field:field_name
-ANY_VARIABLE_NAME_2=KEEPASS_2;/path/to/record3#field:field_name
-
-[DEV]
-GITHUB_TOKEN=KEEPASS_1;/path/to/record53#field:field_name
-AWS_ACCESS_KEY_ID=KEEPASS_1;/path/to/record27#field:field_name
-AWS_SECRET_ACCESS_KEY=KEEPASS_2;/path/to/record33#field:field_name
-ANY_VARIABLE_NAME=KEEPASS_1;/path/to/record45#field:field_name
-VARIABLE_TO_BE_USED_ON_DEV=KEEPASS_2;/path/to/record12#field:field_name
+[...]
+VAR@AWS_ACCESS_KEY_ID=Project:/path/to/record1#field:aws_access_keyid
+[...]
 ~~~
 
-### Queries type
 
-#### keepass
 
-KeePass queries adhere to the following format:
-
-/path/to/record/to/retrieve#record_type:record_name
-
-Where:
-
-* **/path/to/registry/to/retire** is the path to the registry where the secret is stored in the KeePass database
-
-* **record_type** can get the following values:
-  * **field**. To indicate to KeePass that the secret is stored in a field
-  * **attach**. To indicate to KeePass that the secret is stored as an attachment.
-* **record_name**. The name of field or attachment where is stored the secret
-
-## Step 4
-
-Just use it!
-
-### Dumping data
-
-In order to dump data just run:
-
-~~~
-$ secretsintheenv dump <section>
-~~~
-
-Where section are the defined sections in manifest files. In our example would be PROD, QUA and DEV
-
-Ex for dumping secrets 
-
-* table format
-~~~
-$ secretsintheenv dump prod
-~~~
-
-or
-
-~~~
-secretsintheenv dump prod --format table
-~~~
-
-* powershell style
-  
-~~~
-secretsintheenv dump prod --format powershell_shell
-~~~
-
-* cmd style
-
-~~~
-secretsintheenv dump prod --format cmd_shell
-~~~
-
-* unix_shell style
-
-~~~
-secretsintheenv dump prod --format unix_shell
-~~~
-
-* json
-
-~~~
-secretsintheenv dump prod --format json
-~~~
-
-* ssh_keys
-
-~~~
-secretsintheenv dump prod --format ssh_keys
-~~~
-
-### Running a command
-
-Use the format:
-
-~~~
-$ secretsintheenv run <section> <command>
-~~~
-
-Where \<section\> are the defined sections in manifest files. In our example would be PROD, QUA and DEV, and \<command\> the command to execute and load the secrets
-
-For example:
-
-~~~
-$ secretsintheenv run qua /bin/bash
-~~~
-
-It will execute an interactive bash shell by loading the secrets defined in QUA section as environment variables and SSH keys into the SSH-Agent
-
-All secrets are ephimerals, so, once the command ends, all secrets are removed from the memory.
