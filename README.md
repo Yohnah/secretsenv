@@ -43,7 +43,7 @@ Welcome to this simple project, an application launcher to load your secrets in 
 Install on Unix-Like and MacOS:
 
 ~~~
-$ sudo pip install secretsintheenv
+$ pip install secretsintheenv
 ~~~
 
 On Windows 
